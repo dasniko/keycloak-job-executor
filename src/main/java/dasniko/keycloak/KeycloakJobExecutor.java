@@ -1,5 +1,6 @@
 package dasniko.keycloak;
 
+import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
@@ -17,38 +18,48 @@ public class KeycloakJobExecutor {
     private Properties props;
 
     public static void main(String[] args) {
+        new KeycloakJobExecutor().run();
+    }
 
-        KeycloakJobExecutor executor = new KeycloakJobExecutor();
-
+    private void run() {
         String username = System.getProperty("kcAdminUsr");
         String password = System.getProperty("kcAdminPwd");
         String environment = System.getProperty("kcEnv", "");
 
-        String jobId = "create-test-realm";
+        String jobId = System.getProperty("kcJobId");
 
-        executor.readApplicationProperties(environment);
+        readApplicationProperties(environment);
 
-        Keycloak kc = executor.createKeycloakClient(username, password);
+        Keycloak kc = createKeycloakClient(username, password);
 
         ServiceLoader<KeycloakJob> serviceLoader = ServiceLoader.load(KeycloakJob.class);
         for (KeycloakJob job : serviceLoader) {
             if (null != job.getId() && job.getId().equalsIgnoreCase(jobId)) {
                 System.out.printf("Found job %s in %s\n", jobId, job.getClass().getCanonicalName());
                 System.out.printf("Executing %s...\n", jobId);
-                job.execute(kc);
+                job.execute(kc, props.getProperty("realm"));
                 System.out.printf("Finished job %s\n", jobId);
             }
         }
-
     }
 
     private Keycloak createKeycloakClient(String username, String password) {
         String authServerUrl = props.getProperty("authServerUrl", "http://localhost:8080/auth");
-        String realm = props.getProperty("realm", "master");
-        String clientId = props.getProperty("resource", "admin-cli");
+        String realm = props.getProperty("adminRealm", "master");
+        String clientId = props.getProperty("adminClientId", "admin-cli");
 
-        System.out.printf("Creating KeycloakClient with authServerUr=%s, realm=%s, clientId=%s\nThis may take a while...\n",
+        System.out.printf("Creating KeycloakClient with authServerUr=%s, realm=%s, clientId=%s\n" +
+                "This may take some seconds...\n",
             authServerUrl, realm, clientId);
+
+        ResteasyClientBuilder resteasyClientBuilder = new ResteasyClientBuilder();
+        if (null != props.getProperty("proxyHost")) {
+            resteasyClientBuilder.defaultProxy(
+                props.getProperty("proxyHost"),
+                Integer.parseInt(props.getProperty("proxyPort"))
+            );
+        }
+        ResteasyClient resteasyClient = resteasyClientBuilder.build();
 
         return KeycloakBuilder.builder()
                 .serverUrl(authServerUrl)
@@ -56,7 +67,7 @@ public class KeycloakJobExecutor {
                 .username(username)
                 .password(password)
                 .clientId(clientId)
-                .resteasyClient(new ResteasyClientBuilder().build())
+                .resteasyClient(resteasyClient)
                 .build();
     }
 

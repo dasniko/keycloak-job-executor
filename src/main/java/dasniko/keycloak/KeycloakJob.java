@@ -9,6 +9,6 @@ public interface KeycloakJob {
 
     String getId();
 
-    void execute(Keycloak kc);
+    void execute(Keycloak kc, String realmName);
 
 }

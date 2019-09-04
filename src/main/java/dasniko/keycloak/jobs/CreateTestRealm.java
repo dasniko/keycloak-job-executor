@@ -15,13 +15,13 @@ public class CreateTestRealm implements KeycloakJob {
     }
 
     @Override
-    public void execute(Keycloak kc) {
-        createRealm(kc);
+    public void execute(Keycloak kc, String realmName) {
+        createRealm(kc, realmName);
     }
 
-    private static void createRealm(Keycloak kc) {
+    private static void createRealm(Keycloak kc, String realmName) {
         RealmRepresentation realm = new RealmRepresentation();
-        realm.setRealm("test_" + System.currentTimeMillis());
+        realm.setRealm(realmName + "_" + System.currentTimeMillis());
         realm.setEnabled(Boolean.TRUE);
         kc.realms().create(realm);
     }
