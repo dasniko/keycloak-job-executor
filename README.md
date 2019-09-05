@@ -12,10 +12,10 @@ Simple tool to run/execute admin jobs against a Keycloak instance.
 |`realm` |`application.properties` |The name of the realm the jobs should run in. | |
 |`proxyHost`* |`application.properties` |The hostname of an optional proxy. | |
 |`proxyPort`* |`application.properties` |The port of an optional proxy. | |
-|`kcAdminUsr` |System properties |The admin username. | |
-|`kcAdminPwd` |System properties |The password of the admin user. | |
-|`kcEnv`* |System properties |If given, the appropriate `application-{env}.properties` file of the environment is used. _(see below)_ | |
-|`kcJobId` |System properties |The ID (name) of the job to run/execute. | |
+|`kcAdminUsr` |System properties / prompt |The admin username. | |
+|`kcAdminPwd` |System properties / prompt |The password of the admin user. | |
+|`kcEnv`* |System properties / prompt |If given, the appropriate `application-{env}.properties` file of the environment is used. _(see below)_ | |
+|`kcJobId` |System properties / prompt |The ID (name) of the job to run/execute. | |
 
 _\* = optional_
 
@@ -28,8 +28,15 @@ You _always_ have to provide _all_ config values in the environment specific fil
 
 ## Run
 
-This tool is intended to be executed from an IDE.
-Simply run the `main()` method from [`KeycloakJobExecutor`](./src/main/java/dasniko/keycloak/KeycloakJobExecutor.java) class and provide all the necessary configuration.
+To run this tool, simply execute
+
+    $ mvn exec:java
+
+at the project root in your CLI.
+Provide optional system properties with `-DmySystemPropertyName=...`, if desired.
+
+It's also possible to run the `main()` method of [`KeycloakJobExecutor`](./src/main/java/dasniko/keycloak/KeycloakJobExecutor.java) class directly from your IDE.
+Due to lack of the `Console` object in IDEs, the password prompt will not be hidden, but visible in cleartext in your IDE console!
 
 ## Creating Jobs
 

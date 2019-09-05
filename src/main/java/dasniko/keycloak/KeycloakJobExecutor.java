@@ -5,9 +5,11 @@ import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 
+import java.io.Console;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Properties;
+import java.util.Scanner;
 import java.util.ServiceLoader;
 
 /**
@@ -22,11 +24,10 @@ public class KeycloakJobExecutor {
     }
 
     private void run() {
-        String username = System.getProperty("kcAdminUsr");
-        String password = System.getProperty("kcAdminPwd");
-        String environment = System.getProperty("kcEnv", "");
-
-        String jobId = System.getProperty("kcJobId");
+        String username = getProperty("kcAdminUsr", "Admin username: ");
+        String password = getPasswordProperty("kcAdminPwd", "Admin password: ");
+        String environment = getProperty("kcEnv", "Environment: ");
+        String jobId = getProperty("kcJobId", "JobId: ");
 
         readApplicationProperties(environment);
 
@@ -86,6 +87,35 @@ public class KeycloakJobExecutor {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    private String getProperty(String propertyName, String prompt) {
+        return getProperty(propertyName, prompt, false);
+    }
+
+    private String getPasswordProperty(String propertyName, String prompt) {
+        return getProperty(propertyName, prompt, true);
+    }
+
+    private String getProperty(String propertyName, String prompt, boolean isPassword) {
+        String propValue = System.getProperty(propertyName);
+
+        if (null == propValue || propValue.isEmpty()) {
+            Console console = System.console();
+            if (null != console) {
+                if (isPassword) {
+                    propValue = new String(System.console().readPassword(prompt));
+                } else {
+                    propValue = System.console().readLine(prompt);
+                }
+            } else {
+                System.out.print(prompt);
+                Scanner scanner = new Scanner(System.in);
+                propValue = scanner.nextLine();
+            }
+        }
+
+        return propValue;
     }
 
 }
